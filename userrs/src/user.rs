@@ -45,25 +45,18 @@ impl UserAPI for Xv6 {
     }
 }
 
-// user.h ffi
-
-pub(crate) mod syscalls {
+/// Kernel system calls
+pub mod syscalls {
     unsafe extern "C" {
-        pub(crate) unsafe fn write(fd: i32, buf: *const u8, len: i32) -> i32;
-        pub(crate) unsafe fn read(fd: i32, buf: *mut u8, len: i32) -> i32;
-    }
-}
-pub(crate) mod ulib {
-    unsafe extern "C" {
-        // pub(crate) unsafe fn atoi(s: *const u8) -> i32;
-        // pub(crate) unsafe fn memset(buf: *mut u8, c: u8, len: i32) -> *mut u8;
-        // pub(crate) unsafe fn gets(buf: *mut u8, len: i32) -> *mut u8;
-        // pub(crate) unsafe fn strlen(buf: *const u8) -> u32;
-        // pub(crate) unsafe fn strcmp(a: *const u8, b: *const u8) -> i32;
-    }
-}
-pub(crate) mod print {
-    unsafe extern "C" {
-        // pub(crate) unsafe fn printf(fmt: *const u8, ...) -> i32;
+        /// Write to a file descriptor
+        pub unsafe fn write(fd: i32, buf: *const u8, len: i32) -> i32;
+        /// Read from a file descriptor
+        pub unsafe fn read(fd: i32, buf: *mut u8, len: i32) -> i32;
+        /// Allocate memory
+        #[allow(dead_code)]
+        pub unsafe fn sbrk(n: i32) -> *mut u8;
+        /// Exit the process
+        #[allow(dead_code)]
+        pub unsafe fn exit(status: i32) -> !;
     }
 }
