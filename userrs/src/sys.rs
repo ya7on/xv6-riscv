@@ -1,8 +1,26 @@
+/// File descriptor for system calls
+#[derive(Clone, Copy)]
+pub enum FileDescriptor {
+    Stdin,
+    Stdout,
+    Stderr,
+}
+
+impl Into<i32> for FileDescriptor {
+    fn into(self) -> i32 {
+        match self {
+            FileDescriptor::Stdin => 0,
+            FileDescriptor::Stdout => 1,
+            FileDescriptor::Stderr => 2,
+        }
+    }
+}
+
 /// Low level system calls
 pub trait Sys {
-    fn write(&self, output: &str) -> i32;
-    fn writeln(&self, output: &str) -> i32;
-    fn readln(&self, prompt: &str, buf: &mut [u8]) -> usize;
+    fn write(&self, fd: FileDescriptor, output: &str) -> i32;
+    fn writeln(&self, fd: FileDescriptor, output: &str) -> i32;
+    fn readln(&self, fd: FileDescriptor, buf: &mut [u8]) -> usize;
 }
 
 /// Safe guard before unsafe syscalls
@@ -10,28 +28,26 @@ pub trait Sys {
 pub struct Xv6;
 
 impl Sys for Xv6 {
-    fn write(&self, output: &str) -> i32 {
+    fn write(&self, fd: FileDescriptor, output: &str) -> i32 {
         unsafe {
-            syscalls::write(1, output.as_ptr(), output.len() as i32);
+            syscalls::write(fd.into(), output.as_ptr(), output.len() as i32);
             0
         }
     }
 
-    fn writeln(&self, output: &str) -> i32 {
-        self.write(output);
-        self.write("\n");
+    fn writeln(&self, fd: FileDescriptor, output: &str) -> i32 {
+        self.write(fd, output);
+        self.write(fd, "\n");
         0
     }
 
-    fn readln(&self, prompt: &str, buf: &mut [u8]) -> usize {
-        self.write(prompt);
-
+    fn readln(&self, fd: FileDescriptor, buf: &mut [u8]) -> usize {
         let mut i = 0;
 
         loop {
             let mut ch: [u8; 1] = [0];
             unsafe {
-                syscalls::read(0, ch.as_mut_ptr(), 1);
+                syscalls::read(fd.into(), ch.as_mut_ptr(), 1);
             }
             if ch[0] == b'\n' || ch[0] == 0 || i + 1 >= buf.len() {
                 buf[i] = 0;

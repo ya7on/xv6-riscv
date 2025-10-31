@@ -1,10 +1,17 @@
 use alloc::string::String;
 
-use crate::sys::Sys;
+use crate::{io::IO, sys::Sys};
 
 pub fn main<X: Sys>(x: &X) -> i32 {
-    let mut s = String::new();
-    s.push_str("Hello, World from H_E_A_P!");
-    x.writeln(s.as_str());
+    let io = IO::new(x);
+
+    let mut stdout_str = String::new();
+    stdout_str.push_str("Hello, World!");
+    io.println(&stdout_str);
+
+    let mut stderr_str = String::new();
+    stderr_str.push_str("World, Hello!");
+    io.eprintln(&stderr_str);
+
     0
 }
