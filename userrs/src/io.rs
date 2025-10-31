@@ -32,12 +32,17 @@ impl<'a, X: Sys> IO<'a, X> {
         self.input_sized::<128>(prompt)
     }
 
-    /// Print a message to the STDOUT output.
+    /// Print a message to the STDOUT output without a newline at the end.
+    pub fn print(&self, msg: &str) {
+        self.sys.write(FileDescriptor::Stdout, msg);
+    }
+
+    /// Print a message to the STDOUT output with a newline at the end.
     pub fn println(&self, msg: &str) {
         self.sys.writeln(FileDescriptor::Stdout, msg);
     }
 
-    /// Print a message to the STDERR output.
+    /// Print a message to the STDERR output with a newline at the end.
     pub fn eprintln(&self, msg: &str) {
         self.sys.writeln(FileDescriptor::Stderr, msg);
     }

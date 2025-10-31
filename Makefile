@@ -49,6 +49,9 @@ $U/_helloworld: $U/helloworld.o $(ULIB) $(RUST_LIB) $U/user.ld
 $U/_calcrs: $U/calcrs.o $(ULIB) $(RUST_LIB) $U/user.ld
 	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/calcrs.o $(RUST_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/calcrs.asm
+$U/_echors: $U/echors.o $(ULIB) $(RUST_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/echors.o $(RUST_LIB) $(ULIB)
+	$(OBJDUMP) -S $@ > $U/echors.asm
 
 # Try to infer the correct TOOLPREFIX if not set
 ifndef TOOLPREFIX
@@ -160,7 +163,8 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_helloworld\
 	$U/_calc\
-	$U/_calcrs
+	$U/_calcrs \
+	$U/_echors
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

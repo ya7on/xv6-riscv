@@ -1,9 +1,9 @@
 use alloc::string::String;
 
-use crate::{io::IO, sys::Sys};
+use crate::{context::Context, sys::Sys};
 
-pub fn main<X: Sys>(x: &X) -> i32 {
-    let io = IO::new(x);
+pub fn main<X: Sys>(ctx: Context<X>) -> i32 {
+    let io = ctx.io();
 
     let mut stdout_str = String::new();
     stdout_str.push_str("Hello, World!");

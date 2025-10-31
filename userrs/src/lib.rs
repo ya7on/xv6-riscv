@@ -2,6 +2,7 @@
 
 extern crate alloc;
 
+mod context;
 mod io;
 mod programs;
 mod sys;
@@ -42,11 +43,21 @@ mod xv6alloc {
 #[unsafe(no_mangle)]
 pub extern "C" fn hello_world_rs() -> i32 {
     let x = sys::Xv6;
-    programs::hello_world::main(&x)
+    let context = context::Context::new(&x);
+    programs::hello_world::main(context)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn calc_rs() -> i32 {
     let x = sys::Xv6;
-    programs::calc::main(&x)
+    let context = context::Context::new(&x);
+    programs::calc::main(context)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn echo_rs(argc: i32, argv: *const *const u8) -> i32 {
+    let x = sys::Xv6;
+    let args = unsafe { context::Args::from_raw(argc, argv) };
+    let context = context::Context::new_with_args(&x, args);
+    programs::echo::main(context)
 }
