@@ -1,4 +1,4 @@
-use crate::user::UserAPI;
+use crate::sys::Sys;
 use core::str;
 
 fn atoi(s: &[u8]) -> i32 {
@@ -43,14 +43,14 @@ pub fn u32_to_str<'a>(mut n: u32, out: &'a mut [u8]) -> &'a str {
     unsafe { str::from_utf8_unchecked(&out[..i]) }
 }
 
-pub fn main<X: UserAPI>() -> i32 {
+pub fn main<X: Sys>(x: &X) -> i32 {
     let mut a_buf = [0u8; 64];
     let mut b_buf = [0u8; 64];
     let mut op_buf = [0u8; 64];
 
-    let a_len_u32 = X::readln("A=", &mut a_buf);
-    let b_len_u32 = X::readln("B=", &mut b_buf);
-    let op_len_u32 = X::readln("op=", &mut op_buf);
+    let a_len_u32 = x.readln("A=", &mut a_buf);
+    let b_len_u32 = x.readln("B=", &mut b_buf);
+    let op_len_u32 = x.readln("op=", &mut op_buf);
 
     let a_len = core::cmp::min(a_len_u32 as usize, a_buf.len());
     let b_len = core::cmp::min(b_len_u32 as usize, b_buf.len());
@@ -62,16 +62,16 @@ pub fn main<X: UserAPI>() -> i32 {
 
     let mut num_buf = [0u8; 12];
     let s = u32_to_str(a as u32, &mut num_buf);
-    X::write(s);
-    X::write(" ");
+    x.write(s);
+    x.write(" ");
     unsafe {
-        X::write(str::from_utf8_unchecked(op));
+        x.write(str::from_utf8_unchecked(op));
     };
-    X::write(" ");
+    x.write(" ");
     let mut num_buf = [0u8; 12];
     let s = u32_to_str(b as u32, &mut num_buf);
-    X::write(s);
-    X::write(" = ");
+    x.write(s);
+    x.write(" = ");
 
     let opch = if op_len > 0 { op_buf[0] } else { 0 };
 
@@ -87,7 +87,7 @@ pub fn main<X: UserAPI>() -> i32 {
 
     let mut num_buf = [0u8; 12];
     let s = u32_to_str(result as u32, &mut num_buf);
-    X::writeln(s);
+    x.writeln(s);
 
     0
 }

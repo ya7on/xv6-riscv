@@ -3,16 +3,18 @@
 extern crate alloc;
 
 mod programs;
-mod user;
+mod sys;
 
 #[cfg(not(test))]
 mod xv6alloc {
+    use super::sys;
+
     struct Xv6Alloc;
 
     unsafe impl core::alloc::GlobalAlloc for Xv6Alloc {
         unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
             unsafe {
-                let p = super::user::syscalls::sbrk(layout.size() as i32);
+                let p = sys::syscalls::sbrk(layout.size() as i32);
                 if p as isize == -1 {
                     core::ptr::null_mut()
                 } else {
@@ -30,18 +32,20 @@ mod xv6alloc {
     #[panic_handler]
     fn panic(_: &core::panic::PanicInfo) -> ! {
         unsafe {
-            super::user::syscalls::write(1, b"panic\n".as_ptr(), 6);
-            super::user::syscalls::exit(1);
+            sys::syscalls::write(1, b"panic\n".as_ptr(), 6);
+            sys::syscalls::exit(1);
         }
     }
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn hello_world_rs() -> i32 {
-    programs::hello_world::main::<user::Xv6>()
+    let x = sys::Xv6;
+    programs::hello_world::main(&x)
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn calc_rs() -> i32 {
-    programs::calc::main::<user::Xv6>()
+    let x = sys::Xv6;
+    programs::calc::main(&x)
 }

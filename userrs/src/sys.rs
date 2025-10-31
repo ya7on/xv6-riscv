@@ -1,30 +1,30 @@
-pub trait UserAPI {
-    fn write(output: &str) -> i32;
-    fn writeln(output: &str) -> i32;
-    fn readln(prompt: &str, buf: &mut [u8]) -> usize;
+/// Low level system calls
+pub trait Sys {
+    fn write(&self, output: &str) -> i32;
+    fn writeln(&self, output: &str) -> i32;
+    fn readln(&self, prompt: &str, buf: &mut [u8]) -> usize;
 }
 
-/// Safe guard before unsafe syscalls and user API calls
+/// Safe guard before unsafe syscalls
+/// Implementations of the Sys trait for the Xv6 system.
 pub struct Xv6;
 
-impl UserAPI for Xv6 {
-    fn write(output: &str) -> i32 {
+impl Sys for Xv6 {
+    fn write(&self, output: &str) -> i32 {
         unsafe {
             syscalls::write(1, output.as_ptr(), output.len() as i32);
             0
         }
     }
 
-    fn writeln(output: &str) -> i32 {
-        unsafe {
-            syscalls::write(1, output.as_ptr(), output.len() as i32);
-            syscalls::write(1, b"\n".as_ptr(), 1);
-            0
-        }
+    fn writeln(&self, output: &str) -> i32 {
+        self.write(output);
+        self.write("\n");
+        0
     }
 
-    fn readln(prompt: &str, buf: &mut [u8]) -> usize {
-        Self::write(prompt);
+    fn readln(&self, prompt: &str, buf: &mut [u8]) -> usize {
+        self.write(prompt);
 
         let mut i = 0;
 
