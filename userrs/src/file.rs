@@ -11,9 +11,9 @@ pub enum MainFileMode {
     /// Open a file for reading.
     /// `O_RDONLY`
     ReadOnly,
-    // /// Open a file for writing.
-    // /// `O_WRONLY`
-    // WriteOnly,
+    /// Open a file for writing.
+    /// `O_WRONLY`
+    WriteOnly,
     // /// Open a file for reading and writing.
     // /// `O_RDWR`
     // ReadWrite,
@@ -42,10 +42,19 @@ impl FileMode {
         }
     }
 
+    /// Write mode with creating file
+    pub fn create() -> Self {
+        Self {
+            main: MainFileMode::WriteOnly,
+            create: true,
+            truncate: false,
+        }
+    }
+
     pub fn can_read(&self) -> bool {
         match self.main {
             MainFileMode::ReadOnly => true,
-            // MainFileMode::WriteOnly => false,
+            MainFileMode::WriteOnly => false,
             // MainFileMode::ReadWrite => true,
         }
     }
@@ -56,7 +65,7 @@ impl Into<i32> for FileMode {
         let mut flags = 0;
         match self.main {
             MainFileMode::ReadOnly => flags |= 0x000,
-            // MainFileMode::WriteOnly => flags |= 0x001,
+            MainFileMode::WriteOnly => flags |= 0x001,
             // MainFileMode::ReadWrite => flags |= 0x002,
         }
         if self.create {

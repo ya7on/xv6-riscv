@@ -55,6 +55,9 @@ $U/_echors: $U/echors.o $(ULIB) $(RUST_LIB) $U/user.ld
 $U/_catrs: $U/catrs.o $(ULIB) $(RUST_LIB) $U/user.ld
 	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/catrs.o $(RUST_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/catrs.asm
+$U/_touch: $U/touch.o $(ULIB) $(RUST_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/touch.o $(RUST_LIB) $(ULIB)
+	$(OBJDUMP) -S $@ > $U/touch.asm
 
 # Try to infer the correct TOOLPREFIX if not set
 ifndef TOOLPREFIX
@@ -168,7 +171,8 @@ UPROGS=\
 	$U/_calc\
 	$U/_calcrs \
 	$U/_echors \
-	$U/_catrs
+	$U/_catrs \
+	$U/_touch
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

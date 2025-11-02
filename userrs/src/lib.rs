@@ -70,3 +70,11 @@ pub extern "C" fn cat_rs(argc: i32, argv: *const *const u8) -> i32 {
     let context = context::Context::new_with_args(&x, args);
     programs::cat::main(context)
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn touch_rs(argc: i32, argv: *const *const u8) -> i32 {
+    let x = sys::Xv6;
+    let args = unsafe { context::Args::from_raw(argc, argv) };
+    let context = context::Context::new_with_args(&x, args);
+    programs::touch::main(context)
+}
