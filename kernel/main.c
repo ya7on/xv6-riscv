@@ -6,6 +6,8 @@
 
 volatile static int started = 0;
 
+extern void rust_hello(void);
+
 // start() jumps here in supervisor mode on all CPUs.
 void
 main()
@@ -29,6 +31,7 @@ main()
     fileinit();      // file table
     virtio_disk_init(); // emulated hard disk
     userinit();      // first user process
+    rust_hello();    // Rust
     __sync_synchronize();
     started = 1;
   } else {
@@ -41,5 +44,5 @@ main()
     plicinithart();   // ask PLIC for device interrupts
   }
 
-  scheduler();        
+  scheduler();
 }

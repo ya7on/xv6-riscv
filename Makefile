@@ -32,31 +32,45 @@ OBJS = \
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
-RUST_DIR = userrs
 RUST_TARGET = riscv64gc-unknown-none-elf
-RUST_LIB = $(RUST_DIR)/libuserrs.a
-RUST_SRC := $(shell find $(RUST_DIR)/src -name '*.rs') $(RUST_DIR)/Cargo.toml
 
-$(RUST_LIB): $(RUST_SRC)
-	@echo "Building Rust user library $(RUST_LIB) (target=$(RUST_TARGET))"
-	cd $(RUST_DIR) && cargo build --release --target $(RUST_TARGET)
-	@mkdir -p $(dir $(RUST_LIB))
-	cp -f $(RUST_DIR)/target/$(RUST_TARGET)/release/libuserrs.a $(RUST_LIB)
+RUST_KERNEL_OBJ  = kernel/rust_kernel.o
+RUST_KERNEL_DIR = kernelrs
+RUST_KERNEL_LIB = $(RUST_KERNEL_DIR)/libkernelrs.a
+RUST_KERNEL_SRC := $(shell find $(RUST_KERNEL_DIR)/src -name '*.rs') $(RUST_KERNEL_DIR)/Cargo.toml
 
-$U/_helloworld: $U/helloworld.o $(ULIB) $(RUST_LIB) $U/user.ld
-	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/helloworld.o $(RUST_LIB) $(ULIB)
+RUST_USER_DIR = userrs
+RUST_USER_LIB = $(RUST_USER_DIR)/libuserrs.a
+RUST_USER_SRC := $(shell find $(RUST_USER_DIR)/src -name '*.rs') $(RUST_USER_DIR)/Cargo.toml
+
+$(RUST_KERNEL_OBJ): $(RUST_KERNEL_SRC)
+	@echo "[RUST] building kernel rust ($(RUST_TARGET))"
+	cd $(RUST_KERNEL_DIR) && cargo clean
+	cd $(RUST_KERNEL_DIR) && cargo rustc --release --target $(RUST_TARGET) -- --emit=obj
+	@mkdir -p kernel
+	cp $(RUST_KERNEL_DIR)/target/$(RUST_TARGET)/release/deps/*.o $(RUST_KERNEL_OBJ)
+
+OBJS += $(RUST_KERNEL_OBJ)
+
+$(RUST_USER_LIB): $(RUST_USER_SRC)
+	@echo "Building Rust user library $(RUST_USER_LIB) (target=$(RUST_TARGET))"
+	cd $(RUST_USER_DIR) && cargo build --release --target $(RUST_TARGET)
+	@mkdir -p $(dir $(RUST_USER_LIB))
+	cp -f $(RUST_USER_DIR)/target/$(RUST_TARGET)/release/libuserrs.a $(RUST_USER_LIB)
+$U/_helloworld: $U/helloworld.o $(ULIB) $(RUST_USER_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/helloworld.o $(RUST_USER_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/helloworld.asm
-$U/_calcrs: $U/calcrs.o $(ULIB) $(RUST_LIB) $U/user.ld
-	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/calcrs.o $(RUST_LIB) $(ULIB)
+$U/_calcrs: $U/calcrs.o $(ULIB) $(RUST_USER_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/calcrs.o $(RUST_USER_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/calcrs.asm
-$U/_echors: $U/echors.o $(ULIB) $(RUST_LIB) $U/user.ld
-	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/echors.o $(RUST_LIB) $(ULIB)
+$U/_echors: $U/echors.o $(ULIB) $(RUST_USER_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/echors.o $(RUST_USER_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/echors.asm
-$U/_catrs: $U/catrs.o $(ULIB) $(RUST_LIB) $U/user.ld
-	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/catrs.o $(RUST_LIB) $(ULIB)
+$U/_catrs: $U/catrs.o $(ULIB) $(RUST_USER_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/catrs.o $(RUST_USER_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/catrs.asm
-$U/_touch: $U/touch.o $(ULIB) $(RUST_LIB) $U/user.ld
-	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/touch.o $(RUST_LIB) $(ULIB)
+$U/_touch: $U/touch.o $(ULIB) $(RUST_USER_LIB) $U/user.ld
+	$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $U/touch.o $(RUST_USER_LIB) $(ULIB)
 	$(OBJDUMP) -S $@ > $U/touch.asm
 
 # Try to infer the correct TOOLPREFIX if not set
