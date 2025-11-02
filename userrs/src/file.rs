@@ -5,6 +5,14 @@ use crate::{
     sys::{FileDescriptor, Sys},
 };
 
+pub mod flags {
+    pub const O_RDONLY: i32 = 0x000;
+    pub const O_WRONLY: i32 = 0x001;
+    // pub const O_RDWR: i32 = 0x002;
+    pub const O_CREATE: i32 = 0x200;
+    pub const O_TRUNC: i32 = 0x400;
+}
+
 /// Main file mode.
 #[derive(Clone, Copy)]
 pub enum MainFileMode {
@@ -64,15 +72,15 @@ impl Into<i32> for FileMode {
     fn into(self) -> i32 {
         let mut flags = 0;
         match self.main {
-            MainFileMode::ReadOnly => flags |= 0x000,
-            MainFileMode::WriteOnly => flags |= 0x001,
-            // MainFileMode::ReadWrite => flags |= 0x002,
+            MainFileMode::ReadOnly => flags |= flags::O_RDONLY,
+            MainFileMode::WriteOnly => flags |= flags::O_WRONLY,
+            // MainFileMode::ReadWrite => flags |= flags::O_RDWR,
         }
         if self.create {
-            flags |= 0x200;
+            flags |= flags::O_CREATE;
         }
         if self.truncate {
-            flags |= 0x400;
+            flags |= flags::O_TRUNC;
         }
         flags
     }
@@ -80,14 +88,14 @@ impl Into<i32> for FileMode {
 
 /// High-level file descriptor wrapper.
 pub struct File<'a, X: Sys> {
-    sys: &'a X,
+    io: &'a IO<'a, X>,
     mode: FileMode,
     fd: FileDescriptor,
 }
 
 impl<'a, X: Sys> File<'a, X> {
-    pub fn new(sys: &'a X, fd: FileDescriptor, mode: FileMode) -> Self {
-        Self { sys, mode, fd }
+    pub fn new(io: &'a IO<'a, X>, fd: FileDescriptor, mode: FileMode) -> Self {
+        Self { io, mode, fd }
     }
 
     // TODO: Add lazy reading support
@@ -97,13 +105,22 @@ impl<'a, X: Sys> File<'a, X> {
         if !self.mode.can_read() {
             panic!("File is not readable");
         }
-        let io = IO::new(self.sys);
+
         let mut result = String::new();
+        let mut buf = [0u8; 1024];
         loop {
-            let read = io.read::<1024>(self.fd);
-            result.push_str(&read);
-            if read.is_empty() {
+            let read = self
+                .io
+                .read_into(self.fd, &mut buf)
+                .expect("Cannot read file");
+            if read == 0 {
                 break;
+            }
+
+            if let Ok(s) = core::str::from_utf8(&buf[..(read as usize)]) {
+                result.push_str(s);
+            } else {
+                panic!("File is not text");
             }
         }
         result
@@ -112,6 +129,6 @@ impl<'a, X: Sys> File<'a, X> {
 
 impl<'a, X: Sys> Drop for File<'a, X> {
     fn drop(&mut self) {
-        self.sys.close(self.fd);
+        self.io.close(self.fd);
     }
 }

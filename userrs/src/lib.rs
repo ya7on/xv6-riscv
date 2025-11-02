@@ -10,6 +10,8 @@ mod sys;
 
 #[cfg(not(test))]
 mod xv6alloc {
+    use alloc::format;
+
     use super::sys;
 
     struct Xv6Alloc;
@@ -33,9 +35,13 @@ mod xv6alloc {
     static A: Xv6Alloc = Xv6Alloc;
 
     #[panic_handler]
-    fn panic(_: &core::panic::PanicInfo) -> ! {
+    fn panic(info: &core::panic::PanicInfo) -> ! {
         unsafe {
-            sys::syscalls::write(1, b"panic\n".as_ptr(), 6);
+            sys::syscalls::write(1, b"=== RUST PANIC in xv6 ===\n".as_ptr(), 26);
+            let msg = format!("{}", info);
+            sys::syscalls::write(1, msg.as_ptr(), msg.len() as i32);
+            sys::syscalls::write(1, b"\n".as_ptr(), 1);
+
             sys::syscalls::exit(1);
         }
     }

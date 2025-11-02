@@ -40,9 +40,9 @@ pub trait Sys {
     /// Write to a file descriptor with a newline
     fn writeln(&self, fd: FileDescriptor, output: &str) -> i32;
     /// Read from a file descriptor
-    fn read(&self, fd: FileDescriptor, buf: &mut [u8]) -> usize;
+    fn read(&self, fd: FileDescriptor, buf: &mut [u8]) -> i32;
     /// Read from a file descriptor until a newline is encountered
-    fn readln(&self, fd: FileDescriptor, buf: &mut [u8]) -> usize;
+    fn readln(&self, fd: FileDescriptor, buf: &mut [u8]) -> i32;
     /// Open a file descriptor
     fn open(&self, path: &str, flags: i32) -> i32;
     /// Close a file descriptor
@@ -67,12 +67,15 @@ impl Sys for Xv6 {
         0
     }
 
-    fn read(&self, fd: FileDescriptor, buf: &mut [u8]) -> usize {
+    fn read(&self, fd: FileDescriptor, buf: &mut [u8]) -> i32 {
         let mut i = 0;
         loop {
             let mut ch: [u8; 1] = [0];
             unsafe {
-                syscalls::read(fd.into(), ch.as_mut_ptr(), 1);
+                let response = syscalls::read(fd.into(), ch.as_mut_ptr(), 1);
+                if response < 0 {
+                    return response;
+                }
             }
             if ch[0] == 0 || i + 1 >= buf.len() {
                 buf[i] = 0;
@@ -81,16 +84,19 @@ impl Sys for Xv6 {
             buf[i] = ch[0];
             i += 1;
         }
-        i
+        i as i32
     }
 
-    fn readln(&self, fd: FileDescriptor, buf: &mut [u8]) -> usize {
+    fn readln(&self, fd: FileDescriptor, buf: &mut [u8]) -> i32 {
         let mut i = 0;
 
         loop {
             let mut ch: [u8; 1] = [0];
             unsafe {
-                syscalls::read(fd.into(), ch.as_mut_ptr(), 1);
+                let response = syscalls::read(fd.into(), ch.as_mut_ptr(), 1);
+                if response < 0 {
+                    return response;
+                }
             }
             if ch[0] == b'\n' || ch[0] == 0 || i + 1 >= buf.len() {
                 buf[i] = 0;
@@ -100,7 +106,7 @@ impl Sys for Xv6 {
             i += 1;
         }
 
-        i
+        i as i32
     }
 
     fn open(&self, path: &str, flags: i32) -> i32 {
