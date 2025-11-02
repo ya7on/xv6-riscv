@@ -39,6 +39,10 @@ impl<'a> Args<'a> {
     pub fn as_slice(&self) -> &[&str] {
         &self.0
     }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
 }
 
 pub struct Context<'a, X: Sys> {
