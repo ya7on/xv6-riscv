@@ -11,13 +11,24 @@ pub enum FileDescriptor {
     Custom(i32),
 }
 
-impl Into<i32> for FileDescriptor {
-    fn into(self) -> i32 {
-        match self {
+impl From<FileDescriptor> for i32 {
+    fn from(fd: FileDescriptor) -> Self {
+        match fd {
             FileDescriptor::Stdin => 0,
             FileDescriptor::Stdout => 1,
             FileDescriptor::Stderr => 2,
             FileDescriptor::Custom(fd) => fd,
+        }
+    }
+}
+
+impl From<i32> for FileDescriptor {
+    fn from(fd: i32) -> Self {
+        match fd {
+            0 => FileDescriptor::Stdin,
+            1 => FileDescriptor::Stdout,
+            2 => FileDescriptor::Stderr,
+            _ => FileDescriptor::Custom(fd),
         }
     }
 }
